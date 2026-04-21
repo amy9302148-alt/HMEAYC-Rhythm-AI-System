@@ -12,3 +12,4 @@ sqlite3
 openpyxl
 plotly
 python-dotenv
+c:\Users\amy93\OneDrive\桌面\大專競賽\streamlit_app.py
