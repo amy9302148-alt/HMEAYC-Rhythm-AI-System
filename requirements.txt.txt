@@ -1,0 +1,14 @@
+streamlit
+pandas
+opencv-python-headless
+numpy
+ultralytics
+mediapipe
+pyyaml
+pytz
+streamlit-option-menu
+huggingface_hub
+sqlite3
+openpyxl
+plotly
+python-dotenv
