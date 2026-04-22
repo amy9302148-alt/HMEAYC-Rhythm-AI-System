@@ -1980,7 +1980,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-if st.session_state.current_step == "1️⃣ 設定與上傳":
+if st.session_state.current_step == "1️⃣ 影片設定":
     # st.header("1️⃣ 設定與上傳")
     # 將側邊欄的設定移到這裡
     st.markdown("### 🎯 進階設定")
