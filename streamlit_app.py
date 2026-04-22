@@ -2039,11 +2039,11 @@ if st.session_state.current_step == "1️⃣ 影片設定":
         draw_overlays = True
         target_imgsz = 640
     else:
-        frame_interval = 8 # [v94 Speedup] Increased from 4 to 8
+        frame_interval = 4 # [v94.1 Sensitivity Fix] Lowered from 8 to 4
         use_face_mesh = False
-        model_conf = 0.10 # [v94 Speedup] Increased slightly
+        model_conf = 0.01 # [v94.1 Sensitivity Fix] Lowered from 0.10 to 0.01 (Ultra Sensitive)
         draw_overlays = True
-        target_imgsz = 640 # [v94 Speedup] Reduced from 1024 to 640
+        target_imgsz = 960 # [v94.1 Sensitivity Fix] Increased from 640 to 960 for clarity
     
     st.session_state.last_frame_interval = frame_interval
 
