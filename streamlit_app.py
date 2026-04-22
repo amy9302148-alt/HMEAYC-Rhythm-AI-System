@@ -3240,11 +3240,9 @@ if not st.session_state.analysis_done and st.session_state.current_step == "2️
 # The code below now handles the final report rendering.
 
 
-# [v65 Fix] Stop execution only if analysis is NOT complete
-# This prevents the report below from prematurely rendering on page load
-# but allows it to render after st.rerun() when analysis_done is True.
-if not st.session_state.analysis_done:
-    st.stop()
+# [v91.23] Removed st.stop() to prevent blank pages.
+if not st.session_state.get('analysis_done', False) and st.session_state.current_step != "1️⃣ 影片設定":
+    st.warning("⚠️ 請先前往「1️⃣ 影片設定」上傳並點擊『開始分析』，分析完成後數據將在此顯示。")
 
 # --- 4. 報表編輯區 (分析完成後鎖定顯示) ---
 
