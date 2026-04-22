@@ -1949,10 +1949,15 @@ selected_step = option_menu(
     icons=["gear", "camera-video", "diagram-3"],
     default_index=st.session_state.nav_index,
     orientation="horizontal",
-    key=f"wizard_nav_v93_{st.session_state.nav_index}"
+    key=f"wizard_nav_v94_{st.session_state.get('nav_index', 0)}"
 )
 st.session_state.current_step = selected_step
 st.session_state.nav_index = menu_options.index(selected_step)
+
+# [v91.22] Add global Reset Button to Sidebar
+if st.sidebar.button("🧹 系統重置 (Reset & Clear Cache)", use_container_width=True, help="遇到畫面卡頓或上傳失敗時，點此清除所有暫存"):
+    st.session_state.clear()
+    st.rerun()
 
 # [v91.21] 2026 Mobile UX CSS Optimization
 st.markdown("""
@@ -2034,11 +2039,11 @@ if st.session_state.current_step == "1️⃣ 影片設定":
         draw_overlays = True
         target_imgsz = 640
     else:
-        frame_interval = 4
+        frame_interval = 8 # [v94 Speedup] Increased from 4 to 8
         use_face_mesh = False
-        model_conf = 0.05
+        model_conf = 0.10 # [v94 Speedup] Increased slightly
         draw_overlays = True
-        target_imgsz = 1024
+        target_imgsz = 640 # [v94 Speedup] Reduced from 1024 to 640
     
     st.session_state.last_frame_interval = frame_interval
 
@@ -2075,7 +2080,15 @@ if st.session_state.current_step == "1️⃣ 影片設定":
                 st.session_state.uploader_key = uploader_key + 1
                 st.rerun()
     else:
-        uploaded_file = st.file_uploader("📤 上傳影片 (分析時 ID 將自動歸 1)", type=["mp4", "mov"], key=f"main_uploader_{uploader_key}")
+        col_up, col_reset = st.columns([4, 1])
+        with col_up:
+            uploaded_file = st.file_uploader("📤 上傳影片 (分析時 ID 將自動歸 1)", type=["mp4", "mov"], key=f"main_uploader_{uploader_key}")
+        with col_reset:
+            st.write("") # 為了對齊
+            st.write("")
+            if st.button("🗑️ 清空", use_container_width=True):
+                st.session_state.uploader_key = uploader_key + 1
+                st.rerun()
 else:
     # 確保 uploaded_file 在其他步驟不會造成 NameError
     uploaded_file = None
