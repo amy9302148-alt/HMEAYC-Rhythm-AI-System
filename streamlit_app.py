@@ -2715,10 +2715,10 @@ if not st.session_state.analysis_done and st.session_state.current_step == "2️
                             mid = int(ids[i])
                             x1, y1, x2, y2 = map(int, box)
                             
-                            # [v90.2 Fix] Aggressively filter out TINY noise boxes to drop the ID count from ~68 to realistic ~30
+                            # [v94.4 Sensitivity Fix] Lowered from 3000 to 500
                             w_box = x2 - x1
                             h_box_dim = y2 - y1
-                            if w_box * h_box_dim < 3000 and target_track_id <= 0:
+                            if w_box * h_box_dim < 500 and target_track_id <= 0:
                                 continue
                                 
                             curr_center = ((x1+x2)//2, (y1+y2)//2)
