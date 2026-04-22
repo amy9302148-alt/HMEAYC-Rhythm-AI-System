@@ -2636,11 +2636,11 @@ if not st.session_state.analysis_done and st.session_state.current_step == "2️
                                         cv2.putText(annotated_frame, "No Target Found", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
                             
                         if not use_mp:
-                            # [v83] Hyper Drive: FP16 + Agnostic NMS + Device aware
-                            # [v89.9 Update] IOU returned to 0.5. 0.7 caused ID explosion due to duplicate overlapping boxes
+                            # [v94.5 CRITICAL FIX] Disable FP16 (half) on CPU devices to prevent empty detections on HF
+                            use_half = is_fp16 if device != 'cpu' else False
                             results = model.track(frame, persist=True, verbose=False, conf=model_conf, iou=0.5, 
                                                  classes=[0], tracker=tracker_file, imgsz=target_imgsz, 
-                                                 half=is_fp16, device=device, agnostic_nms=True)
+                                                 half=use_half, device=device, agnostic_nms=True)
 
                         # [v83] Cache per-frame analysis data for vectorized social check
                         frame_centers = []
