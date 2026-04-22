@@ -2039,11 +2039,11 @@ if st.session_state.current_step == "1️⃣ 影片設定":
         draw_overlays = True
         target_imgsz = 640
     else:
-        frame_interval = 4 # [v94.1 Sensitivity Fix] Lowered from 8 to 4
+        frame_interval = 4 
         use_face_mesh = False
-        model_conf = 0.01 # [v94.1 Sensitivity Fix] Lowered from 0.10 to 0.01 (Ultra Sensitive)
+        model_conf = 0.05 # [v94.3 Balance] 0.05 is the sweet spot
         draw_overlays = True
-        target_imgsz = 960 # [v94.1 Sensitivity Fix] Increased from 640 to 960 for clarity
+        target_imgsz = 1024 # [v94.3 Quality] Full HD Analysis
     
     st.session_state.last_frame_interval = frame_interval
 
@@ -2769,9 +2769,8 @@ if not st.session_state.analysis_done and st.session_state.current_step == "2️
                             current_display_id = st.session_state.display_mapping.get(mid, -1)
                             is_target = (target_track_id > 0 and current_display_id == target_track_id) 
                             
-                            # [v89.9 Fix] Increase stability threshold slightly to filter out 1-frame ghost detections
-                            # [v90.2 Update] Increased to 8 to massively filter out brief background anomalies!
-                            stability_thresh = 8
+                            # [v94.2 CRITICAL FIX] Set stability threshold to 1 to ensure NO ONE is missed
+                            stability_thresh = 1
                             
                             if st.session_state.id_tracking_count.get(mid, 0) >= stability_thresh or is_target:
                                 if target_track_id > 0:
