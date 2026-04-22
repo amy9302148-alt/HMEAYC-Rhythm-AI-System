@@ -3248,7 +3248,7 @@ if not st.session_state.analysis_done:
 
 # --- 4. 報表編輯區 (分析完成後鎖定顯示) ---
 
-if st.session_state.current_step == "2️⃣ 影片分析與報表":
+if st.session_state.current_step == "2️⃣ 分析報表":
     # [新] 持續顯示 ID 資訊
     if 'final_id_count' in st.session_state and st.session_state.final_id_count > 0:
         st.info(f"📊 偵測到的 ID 數量: {st.session_state.final_id_count}")
@@ -3257,7 +3257,7 @@ if st.session_state.current_step == "2️⃣ 影片分析與報表":
             st.write(f"🔗 群體同步率 (R值): {st.session_state.group_sync_r} (1.0 為完全同步)")
 
 # [v91.16] Combined Analysis & Report Display (Step 2)
-if st.session_state.current_step == "2️⃣ 影片分析與報表":
+if st.session_state.current_step == "2️⃣ 分析報表":
     if 'video_output_path' in st.session_state and st.session_state.video_output_path:
         target_video = st.session_state.video_output_path
         if os.path.exists(target_video):
@@ -3402,7 +3402,7 @@ else:
 
     col_t1, col_t2 = st.columns([1, 3])
     with col_t1:
-        if st.session_state.current_step == "4️⃣ 最終報表":
+        if st.session_state.current_step == "2️⃣ 分析報表":
             teacher_label = st.selectbox("請選擇教師 (示範者) ID:", ["無"] + id_options)
             st.session_state.teacher_label = teacher_label
         else:
@@ -3411,7 +3411,7 @@ else:
     teacher_id = None
     if teacher_label != "無":
         teacher_id = id_map_rev[teacher_label]
-        if st.session_state.current_step == "4️⃣ 最終報表":
+        if st.session_state.current_step == "2️⃣ 分析報表":
             st.info(f"已設定 {teacher_label} 為教師，將計算其他幼兒與其的動作同步率。")
 
     # [v74 New] Restored Data Handling
@@ -3793,7 +3793,7 @@ else:
 
 
     # [v19 New] Display Social Graph
-    if st.session_state.current_step == "3️⃣ 互動網絡圖":
+    if st.session_state.current_step == "3️⃣ 社交網絡":
         # st.write("---")
         st.subheader("🕸️ 班級社交互動網絡圖 (Social Graph)")
         if st.session_state.id_interactions:
@@ -3879,7 +3879,7 @@ else:
                     del st.session_state[key]
             st.rerun()
 
-    if st.session_state.current_step == "4️⃣ 最終報表":
+    if st.session_state.current_step == "2️⃣ 分析報表":
         if st.button("✨ 點此產生 Excel 報表數據"):
             out = io.BytesIO()
             final_excel_df = edited_df.copy()
@@ -4033,7 +4033,7 @@ else:
             st.rerun()
 
     # [v91.19] Next Step Button: Social Analysis (End of Step 2)
-    if st.session_state.current_step == "2️⃣ 影片分析與報表" and st.session_state.analysis_done:
+    if st.session_state.current_step == "2️⃣ 分析報表" and st.session_state.analysis_done:
         st.markdown("---")
         if st.button("🚀 報表生成完畢，前往「3️⃣ 互動網絡圖」分析社交關係", type="primary", use_container_width=True):
             st.session_state.nav_index = 2
