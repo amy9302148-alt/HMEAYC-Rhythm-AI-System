@@ -1948,7 +1948,7 @@ if st.session_state.current_step == "1️⃣ 影片設定":
     with col3:
         st.session_state.perf_mode = st.selectbox("分析效能模式", ["⚡ 超極速 (Ultra Fast)", "🏎️ 渦輪 (Turbo)", "🏃 專業 (Pro)", "⚡ 標準模式 (Balanced)"], index=3)
     with col4:
-        st.session_state.social_threshold_sec = st.slider("判定互動最少秒數 (秒)", 0.5, 10.0, social_threshold_sec)
+        st.session_state.social_threshold_sec = st.slider("判定互動最少秒數 (秒)", 0.5, 10.0, st.session_state.get('social_threshold_sec', 1.0))
 
     st.markdown("---")
     uploader_key = st.session_state.get('uploader_key', 0)
