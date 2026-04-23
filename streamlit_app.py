@@ -771,7 +771,7 @@ def check_gaze_at_target(observer_pos, observer_yaw, target_pos, tolerance=20):
     # Observer should be looking Center
     return abs(observer_yaw) < threshold
 
-def draw_social_graph(interactions, id_map, width=1100, height=1000, min_sec=3.0):
+def draw_social_graph(interactions, id_map, width=1100, height=1000, min_sec=1.0):
     """
     Draw a social network graph using OpenCV.
     interactions: dict {(id1, id2): count}
@@ -1854,37 +1854,44 @@ if 'final_id_list' in st.session_state and st.session_state.final_id_list:
 target_track_id = st.session_state.get('locked_target_id', 0)
 # [v48 New] Context-Aware Sync (Phase 5)
 
-st.sidebar.markdown("### 🎭 活動性質設定")
+# --- 側邊欄系統設定 ---
+with st.sidebar:
+    st.title("⚙️ 系統設定")
+    
+    # 1. 基本資料輸入 (摺疊)
+    with st.expander("📝 基本資料輸入", expanded=False):
+        observer_name = st.text_input("觀察員姓名", value=st.session_state.get('observer_name', ""))
+        activity_name = st.text_input("活動名稱", value=st.session_state.get('activity_name', ""))
+        st.session_state.observer_name = observer_name
+        st.session_state.activity_name = activity_name
 
-# [v52 Fix] Mode Selection moved to Step 1 to prevent State Loss on Re-run
-mode = st.session_state.get('nav_mode', "🚀 全功能分析")
+    # 2. 身份合併工具 (摺疊)
+    with st.expander("🔗 身份合併工具 (ID Merge)", expanded=False):
+        st.info("若 AI 因為遮擋把同一個小朋友認成兩個 ID，請在此合併。")
+        m_col1, m_col2 = st.columns(2)
+        with m_col1:
+            source_id = st.number_input("原 ID (消失者)", min_value=0, value=0, key="merge_src")
+        with m_col2:
+            target_id = st.number_input("新 ID (繼承者)", min_value=0, value=0, key="merge_tgt")
+        
+        if st.button("確認合併身份", type="primary", use_container_width=True):
+            if source_id > 0 and target_id > 0 and source_id != target_id:
+                if 'manual_id_map' not in st.session_state:
+                    st.session_state.manual_id_map = {}
+                st.session_state.manual_id_map[source_id] = target_id
+                st.success(f"✅ 已將 ID {source_id} 關聯至 ID {target_id}。")
+            else:
+                st.error("請輸入有效的不同 ID。")
 
-# Activity context and Social threshold moved to Step 1
-activity_context = st.session_state.get('activity_context', "跟隨模仿 (Imitation)")
-social_threshold_sec = st.session_state.get('social_threshold_sec', 3.0)
+    # 3. 歷史紀錄查詢 (移至側邊欄)
+    st.markdown("---")
+    if st.button("🗄️ 開啟歷史紀錄查閱", use_container_width=True):
+        st.session_state.nav_mode = "🗄️ 歷史紀錄查閱"
+        st.info("請前往歷史紀錄頁面（若需要特定步驟，請調整導航）")
 
-# [v21.9.1 New] Manual Identity Merge Tool
-st.sidebar.write("---")
-st.sidebar.subheader("🔗 身份合併工具 (ID Merge)")
-st.sidebar.info("若 AI 因為遮擋把同一個小朋友認成兩個 ID (例如 32 與 47)，您可以在下方進行合併。")
-m_col1, m_col2 = st.sidebar.columns(2)
-with m_col1:
-    source_id = st.number_input("原 ID (消失者)", min_value=0, value=0, key="merge_src")
-with m_col2:
-    target_id = st.number_input("新 ID (繼承者)", min_value=0, value=0, key="merge_tgt")
-
-if st.sidebar.button("確認合併身份", type="primary", use_container_width=True):
-    if source_id > 0 and target_id > 0 and source_id != target_id:
-        if 'manual_id_map' not in st.session_state:
-            st.session_state.manual_id_map = {}
-        st.session_state.manual_id_map[source_id] = target_id
-        st.sidebar.success(f"✅ 已將 ID {source_id} 關聯至 ID {target_id}。分析與表格將合併數據。")
-    else:
-        st.sidebar.error("請輸入有效的不同 ID。")
-
-# [v51 New] Decision Tree Visualization Button
-if st.sidebar.button("🌳 顯示 AI 決策樹邏輯"):
-    st.session_state.show_decision_tree = True
+    # 4. 原有的決策樹按鈕
+    if st.button("🌳 顯示 AI 決策樹邏輯", use_container_width=True):
+        st.session_state.show_decision_tree = True
 
 # [v51 New] Show Decision Tree Diagram (Safe Version)
 if st.session_state.get("show_decision_tree", False):
@@ -1900,8 +1907,8 @@ if st.session_state.get("show_decision_tree", False):
 
 
 def wizard_navigation():
-    # [v91.20 Layout Fix]
-    steps = ["1️⃣ 影片設定", "2️⃣ 執行分析", "3️⃣ 分析報表", "4️⃣ 歷史紀錄"]
+    # [v95.0] New 3-Step Navigation
+    steps = ["1️⃣ 影片設定", "2️⃣ 執行分析", "3️⃣ 社交網絡"]
     
     if 'nav_index' not in st.session_state:
         st.session_state.nav_index = 0
@@ -1909,7 +1916,7 @@ def wizard_navigation():
     # 建立橫向步驟條
     selected = option_menu(
         None, steps, 
-        icons=['gear', 'play-circle', 'file-earmark-bar-graph', 'clock-history'], 
+        icons=['gear', 'play-circle', 'diagram-3'], 
         menu_icon="cast", default_index=st.session_state.nav_index, orientation="horizontal",
         styles={
             "container": {"padding": "0!important", "background-color": "#fafafa"},
@@ -3563,7 +3570,7 @@ else:
             m4.metric("偵測幼兒總數", f"{c_count} 人")
         
         # Human Class-Level Input for Comparison
-        if st.session_state.current_step == "2️⃣ 影片分析與報表":
+        if st.session_state.current_step == "2️⃣ 執行分析":
             with st.expander("📝 紀錄人工全班觀察數據 (點擊展開進行比對)", expanded=False):
                 st.markdown("您可以將您對**全班整體**的觀察填寫於此，以便與 AI 數據進行長期比對與驗證。")
                 c1, c2 = st.columns(2)
@@ -3600,9 +3607,14 @@ else:
                 except Exception as e:
                     logging.error(f"Rename Callback Error: {e}")
 
-    if st.session_state.current_step != "2️⃣ 影片分析與報表":
-        edited_df = df.copy()
-    else:
+    # [v95.0 Fix] Show video and report in Step 2
+    if st.session_state.current_step == "2️⃣ 執行分析":
+        if st.session_state.get('processed_file'):
+            st.video(st.session_state.processed_file)
+            st.success("🎥 分析影片已產出！")
+            
+    # [v95.0 Final] Display Data Editor and Export in Step 2
+    if st.session_state.current_step == "2️⃣ 執行分析":
         edited_df = st.data_editor(
         df, 
         use_container_width=True,
@@ -3660,7 +3672,7 @@ else:
             # Generate graph
             try:
                 # [v74 Fix] Pass sensitivity threshold to graph drawer
-                s_thresh = st.session_state.get('social_threshold_sec', 3.0)
+                s_thresh = st.session_state.get('social_threshold_sec', 1.0)
                 graph_img = draw_social_graph(st.session_state.id_interactions, 
                                             {m: f"{m}" for m in st.session_state.id_list},
                                             min_sec=s_thresh)
@@ -3705,7 +3717,7 @@ else:
                             sec = (count * f_int) / 30.0 
                             
                             # [v74 New] Threshold indicator for better UX
-                            s_thresh = st.session_state.get('social_threshold_sec', 3.0)
+                            s_thresh = st.session_state.get('social_threshold_sec', 1.0)
                             icon = "🔗" if sec >= s_thresh else "⚪"
                             
                             target_col = col_L if i < mid_idx else col_R
@@ -3739,7 +3751,8 @@ else:
                     del st.session_state[key]
             st.rerun()
 
-    if st.session_state.current_step == "2️⃣ 分析報表":
+    if st.session_state.current_step == "2️⃣ 執行分析":
+        st.write("---")
         if st.button("✨ 點此產生 Excel 報表數據"):
             out = io.BytesIO()
             final_excel_df = edited_df.copy()
@@ -3893,8 +3906,8 @@ else:
             st.rerun()
 
     # [v91.19] Next Step Button: Social Analysis (End of Step 2)
-    if st.session_state.current_step == "2️⃣ 分析報表" and st.session_state.analysis_done:
+    if st.session_state.current_step == "2️⃣ 執行分析" and st.session_state.analysis_done:
         st.markdown("---")
-        if st.button("🚀 報表生成完畢，前往「3️⃣ 互動網絡圖」分析社交關係", type="primary", use_container_width=True):
+        if st.button("🚀 報表生成完畢，前往「3️⃣ 社交網絡」分析社交關係", type="primary", use_container_width=True):
             st.session_state.nav_index = 2
             st.rerun()
