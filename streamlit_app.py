@@ -2031,17 +2031,17 @@ if uploaded_file:
         gc.collect()
 
 # --- 防呆機制 (Foolproof) ---
-if st.session_state.current_step in ["2️⃣ 影片分析與報表", "3️⃣ 互動網絡圖", "4️⃣ 最終報表"]:
+if st.session_state.current_step in ["2️⃣ 執行分析", "3️⃣ 分析報表", "4️⃣ 歷史紀錄"]:
     if not st.session_state.get('current_tfile_path'):
         st.warning("⚠️ 請先在「1️⃣ 設定與上傳」上傳影片！")
         st.stop()
 
-if st.session_state.current_step in ["3️⃣ 互動網絡圖", "4️⃣ 最終報表"]:
+if st.session_state.current_step in ["3️⃣ 分析報表", "4️⃣ 歷史紀錄"]:
     if not st.session_state.get('analysis_done'):
         st.warning("⚠️ 請先完成「2️⃣ 影片分析」！")
         st.stop()
 
-if not st.session_state.analysis_done and st.session_state.current_step == "2️⃣ 影片分析與報表":
+if not st.session_state.analysis_done and st.session_state.current_step == "2️⃣ 執行分析":
     # 只有當「尚未處理過」這個檔案時，才執行分析
     if st.session_state.get('current_fn') and st.session_state.processed_file != st.session_state.current_fn:
 
