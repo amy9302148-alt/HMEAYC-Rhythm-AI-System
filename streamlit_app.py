@@ -1939,10 +1939,10 @@ if st.session_state.current_step == "1️⃣ 影片設定":
     col1, col2 = st.columns(2)
     with col1:
         st.session_state.nav_mode = st.radio("系統運行模式", ["🚀 全功能分析", "🗄️ 歷史紀錄查閱"], 
-                                          index=0 if mode == "🚀 全功能分析" else 1)
+                                          index=0 if st.session_state.get('nav_mode', "🚀 全功能分析") == "🚀 全功能分析" else 1)
     with col2:
         st.session_state.activity_context = st.radio("選擇活動類型", ["跟隨模仿 (Imitation)", "自由創作 (Creative)"], 
-                                                 index=0 if activity_context == "跟隨模仿 (Imitation)" else 1)
+                                                 index=0 if st.session_state.get('activity_context', "跟隨模仿 (Imitation)") == "跟隨模仿 (Imitation)" else 1)
     
     col3, col4 = st.columns(2)
     with col3:
