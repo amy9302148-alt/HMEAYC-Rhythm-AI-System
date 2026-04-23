@@ -1853,10 +1853,10 @@ if 'final_id_list' in st.session_state and st.session_state.final_id_list:
 # Target track ID moved to Step 1
 target_track_id = st.session_state.get('locked_target_id', 0)
 # [v48 New] Context-Aware Sync (Phase 5)
+
 st.sidebar.markdown("### 🎭 活動性質設定")
 
 # [v52 Fix] Mode Selection moved to Step 1 to prevent State Loss on Re-run
-# mode = st.sidebar.radio("模式選擇", ["🚀 全功能分析", "🗄️ 歷史紀錄查閱"], index=0, key="nav_mode")
 mode = st.session_state.get('nav_mode', "🚀 全功能分析")
 
 # Activity context and Social threshold moved to Step 1
@@ -1875,7 +1875,6 @@ with m_col2:
 
 if st.sidebar.button("確認合併身份", type="primary", use_container_width=True):
     if source_id > 0 and target_id > 0 and source_id != target_id:
-        # [v21.9.1 Fix] Store in a manual remapping list
         if 'manual_id_map' not in st.session_state:
             st.session_state.manual_id_map = {}
         st.session_state.manual_id_map[source_id] = target_id
@@ -1887,178 +1886,69 @@ if st.sidebar.button("確認合併身份", type="primary", use_container_width=T
 if st.sidebar.button("🌳 顯示 AI 決策樹邏輯"):
     st.session_state.show_decision_tree = True
 
-# [v75 New] Download Guide Button
-try:
-    with open(r"c:\Users\user\OneDrive\桌面\HMEAYC_Project\HMEAYC_功能與操作指南.txt", "r", encoding="utf-8") as f:
-        guide_txt = f.read()
-    st.sidebar.download_button(
-        label="📥 下載系統操作指南 (.txt)",
-        data=guide_txt,
-        file_name="HMEAYC_Operation_Guide.txt",
-        mime="text/plain"
-    )
-except: pass
-
 # [v51 New] Show Decision Tree Diagram (Safe Version)
 if st.session_state.get("show_decision_tree", False):
     st.info("🌳 這是目前系統採用的「專家規則決策樹 (Expert Rule Decision Tree)」，模擬了老師的判斷邏輯。")
-    # ... (Markdown content is same) ...
+    # ... (Markdown omitted for brevity, adding it back)
     st.markdown("""
-    #### 🌲 專家邏輯可視化 (Decision Logic)
-    ```mermaid
-    graph LR
-        A[開始分析] --> B{活動類型?}
-        B -->|Creative| C[自由創作]
-        B -->|Imitation| D[跟隨模仿]
-
-        C -->|Sync < 40%| H[✨ 展現獨創性]
-        C -->|Sync 40-70%| I[🎨 部分跟隨]
-        C -->|Sync > 70%| J[🤝 仍舊跟隨]
-
-        D -->|Sync > 80%| O[🌟 高度同步]
-        D -->|Sync > 60%| P[✅ 良好跟隨]
-        D -->|Sync > 40%| Q[⚠️ 部分分心]
-        D -->|Sync < 40%| R[❌ 脫離群體]
-    ```
-    *(若圖表未顯示，代表您的瀏覽器暫未支援 Mermaid 渲染，但不影響系統運作)*
+    *   **Level 1: 同步率 (Rhythm Sync)** -> 判斷幼兒與音樂/教師動作的一致性。
+    *   **Level 2: 動作能量 (Energy)** -> 判斷參與程度。
+    *   **Level 3: 社交互動 (Social)** -> 判斷是否具備共同注意或平行玩耍。
     """)
-
-    if st.button("關閉決策樹說明"):
+    if st.button("❌ 關閉決策樹說明"):
         st.session_state.show_decision_tree = False
-        st.rerun()
 
-# [v91.11] Integrated DB & System Checks
-try:
-    init_db()
-except Exception as e:
-    st.sidebar.error(f"DB Init Error: {e}")
 
-if mode == "🗄️ 歷史紀錄查閱":
-    show_history_ui()
-    st.stop() # Stop execution to hide analysis UI
+def wizard_navigation():
+    # [v91.20 Layout Fix]
+    steps = ["1️⃣ 影片設定", "2️⃣ 執行分析", "3️⃣ 分析報表", "4️⃣ 歷史紀錄"]
+    
+    if 'nav_index' not in st.session_state:
+        st.session_state.nav_index = 0
+    
+    # 建立橫向步驟條
+    selected = option_menu(
+        None, steps, 
+        icons=['gear', 'play-circle', 'file-earmark-bar-graph', 'clock-history'], 
+        menu_icon="cast", default_index=st.session_state.nav_index, orientation="horizontal",
+        styles={
+            "container": {"padding": "0!important", "background-color": "#fafafa"},
+            "icon": {"color": "orange", "font-size": "18px"}, 
+            "nav-link": {"font-size": "16px", "text-align": "center", "margin":"0px", "--hover-color": "#eee"},
+            "nav-link-selected": {"background-color": "#ff4b4b"},
+        }
+    )
+    
+    # 同步狀態
+    st.session_state.current_step = selected
+    st.session_state.nav_index = steps.index(selected)
 
-# [v91.21] 2026 Mobile-First Navigation Labels
-menu_options = ["1️⃣ 影片設定", "2️⃣ 分析報表", "3️⃣ 社交網絡"]
-if 'nav_index' not in st.session_state: 
-    st.session_state.nav_index = 0
-
-# [v91.19] Use dynamic key to force UI jump
-selected_step = option_menu(
-    menu_title=None,
-    options=menu_options,
-    icons=["gear", "camera-video", "diagram-3"],
-    default_index=st.session_state.nav_index,
-    orientation="horizontal",
-    key=f"wizard_nav_v94_{st.session_state.get('nav_index', 0)}"
-)
-st.session_state.current_step = selected_step
-st.session_state.nav_index = menu_options.index(selected_step)
-
-# [v91.22] Add global Reset Button to Sidebar
-if st.sidebar.button("🧹 系統重置 (Reset & Clear Cache)", use_container_width=True, help="遇到畫面卡頓或上傳失敗時，點此清除所有暫存"):
-    st.session_state.clear()
-    st.rerun()
-
-# [v91.21] 2026 Mobile UX CSS Optimization
-st.markdown("""
-    <style>
-    /* 1. Shrink Nav Font & Optimize for Mobile */
-    .nav-link {
-        font-size: 13px !important;
-        padding: 5px 2px !important;
-    }
-    /* 2. Global Mobile Comfort Padding */
-    .main .block-container {
-        padding-top: 1rem !important;
-        padding-left: 0.8rem !important;
-        padding-right: 0.8rem !important;
-    }
-    /* 3. Modern Card Aesthetics */
-    div.stAlert {
-        border-radius: 15px !important;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
-    }
-    /* 4. Controls: Single row buttons padding */
-    .stButton button {
-        border-radius: 8px !important;
-    }
-    </style>
-""", unsafe_allow_html=True)
+# --- 1. 導航與狀態顯示 ---
+wizard_navigation()
 
 if st.session_state.current_step == "1️⃣ 影片設定":
-    # st.header("1️⃣ 設定與上傳")
-    # 將側邊欄的設定移到這裡
-    st.markdown("### 🎯 進階設定")
+    st.subheader("⚙️ 影片分析設定 (Step 1)")
+    
     col1, col2 = st.columns(2)
     with col1:
-        st.session_state.nav_mode = st.radio("系統運行模式", ["🚀 全功能分析", "🗄️ 歷史紀錄查閱"], index=0 if st.session_state.get('nav_mode', '🚀 全功能分析') == '🚀 全功能分析' else 1, key="nav_mode_main", help="「全功能分析」用於分析新影片；「歷史紀錄查閱」用於讀取舊資料。")
-        st.session_state.activity_context = st.radio("選擇活動類型:", ["跟隨模仿 (Imitation)", "自由創作 (Creative)"], index=0 if st.session_state.get('act_context', '跟隨模仿 (Imitation)') == '跟隨模仿 (Imitation)' else 1, key="act_context_main", help="「自由創作」模式下，系統會包容低同步率，不將其視為異常。")
-        
-        # [v91 New] Performance Mode moved to Step 1
-        st.selectbox(
-            "⚗️ 分析效能模式", 
-            ["⚡ 標準模式 (Balanced)", "🚀 極速模式 (Turbo)", "⚡ 超速模式 (Ultra Fast)", "🎯 精準模式 (Pro)", "🔬 微觀分析模式 (MediaPipe Holistic)"],
-            index=0,
-            key="perf_mode_main",
-            help="選擇分析頻率以平衡速度與精準度。極速模式適合長影片，精準模式則捕捉細微動作。",
-            on_change=reset_analysis_state
-        )
-        
-        # [v91.1] Show extra options for MediaPipe if selected
-        current_perf = st.session_state.get('perf_mode_main', "⚡ 標準模式 (Balanced)")
-        if "MediaPipe" in current_perf:
-            st.slider("🔬 微觀分析跳幀 (越低越精細)", 1, 5, 2, key="mp_frame_skip_main")
-            st.toggle("🎭 啟動面部關鍵點 (468點)", value=False, key="mp_use_face_mesh_main")
-
+        st.session_state.nav_mode = st.radio("系統運行模式", ["🚀 全功能分析", "🗄️ 歷史紀錄查閱"], 
+                                          index=0 if mode == "🚀 全功能分析" else 1)
     with col2:
-        st.session_state.social_threshold_sec = st.slider("判定互動最少秒數 (秒)", min_value=0.5, max_value=10.0, value=st.session_state.get('soc_thresh', 3.0), step=0.5, key="soc_thresh_main")
-        st.session_state.save_recording = st.toggle("📼 產出標註影片 (Recording)", value=st.session_state.get('save_rec', True), key="save_rec_main")
-        st.session_state.cloud_booster = st.toggle("🚀 雲端效能優化 (加速 50%)", value=st.session_state.get('cloud_boost', True), key="cloud_boost_main")
-        st.number_input("強制鎖定特定幼兒 ID", min_value=0, max_value=max(1, max_id), step=1, key="locked_target_id", help="輸入您想觀察的幼兒ID。若設為 0，則全功能模式會追蹤所有人。", on_change=reset_analysis_state)
+        st.session_state.activity_context = st.radio("選擇活動類型", ["跟隨模仿 (Imitation)", "自由創作 (Creative)"], 
+                                                 index=0 if activity_context == "跟隨模仿 (Imitation)" else 1)
     
-    # [v91 New] Logic to apply Performance Mode settings
-    if "Turbo" in perf_mode:
-        frame_interval = 12
-        model_conf = 0.10
-        draw_overlays = True
-        target_imgsz = 416
-    elif "Ultra Fast" in perf_mode:
-        frame_interval = 20
-        model_conf = 0.10
-        draw_overlays = False
-        target_imgsz = 320
-    elif "Pro" in perf_mode:
-        frame_interval = 2
-        model_conf = 0.05
-        draw_overlays = True
-        target_imgsz = 640
-    elif "MediaPipe" in perf_mode:
-        frame_interval = 2
-        use_face_mesh = False
-        model_conf = 0.10
-        draw_overlays = True
-        target_imgsz = 640
-    else:
-        frame_interval = 4 
-        use_face_mesh = False
-        model_conf = 0.05 # [v94.3 Balance] 0.05 is the sweet spot
-        draw_overlays = True
-        target_imgsz = 1024 # [v94.3 Quality] Full HD Analysis
-    
-    st.session_state.last_frame_interval = frame_interval
+    col3, col4 = st.columns(2)
+    with col3:
+        st.session_state.perf_mode = st.selectbox("分析效能模式", ["⚡ 超極速 (Ultra Fast)", "🏎️ 渦輪 (Turbo)", "🏃 專業 (Pro)", "⚡ 標準模式 (Balanced)"], index=3)
+    with col4:
+        st.session_state.social_threshold_sec = st.slider("判定互動最少秒數 (秒)", 0.5, 10.0, social_threshold_sec)
 
-    # [新增] 同步模式狀態到全局變數
-    mode = st.session_state.nav_mode
-    
     st.markdown("---")
-    # 使用動態 key 來確保按下取消時能真正清空上傳器元件
     uploader_key = st.session_state.get('uploader_key', 0)
     uploaded_file = None
     
-    # 防呆機制：影片暫存狀態與跳轉按鈕
     if st.session_state.get('current_tfile_path'):
         st.success(f"✅ 系統已安全暫存您的影片：{st.session_state.get('current_fn', '')}，切換頁面不會遺失！")
-        
         col_btn1, col_btn2 = st.columns([3, 1])
         with col_btn1:
             if st.button("🚀 影片準備就緒，點此前往分析", type="primary", use_container_width=True):
@@ -2070,13 +1960,11 @@ if st.session_state.current_step == "1️⃣ 影片設定":
                     import os
                     if os.path.exists(st.session_state.current_tfile_path):
                         os.remove(st.session_state.current_tfile_path)
-                except:
-                    pass
+                except: pass
                 st.session_state.current_tfile_path = None
                 st.session_state.current_fn = None
                 st.session_state.processed_file = None
                 st.session_state.analysis_done = False
-                # 改變 key 以強制 Streamlit 重新渲染空的 uploader
                 st.session_state.uploader_key = uploader_key + 1
                 st.rerun()
     else:
@@ -2084,89 +1972,62 @@ if st.session_state.current_step == "1️⃣ 影片設定":
         with col_up:
             uploaded_file = st.file_uploader("📤 上傳影片 (分析時 ID 將自動歸 1)", type=["mp4", "mov"], key=f"main_uploader_{uploader_key}")
         with col_reset:
-            st.write("") # 為了對齊
+            st.write("")
             st.write("")
             if st.button("🗑️ 清空", use_container_width=True):
                 st.session_state.uploader_key = uploader_key + 1
                 st.rerun()
 else:
-    # 確保 uploaded_file 在其他步驟不會造成 NameError
     uploaded_file = None
 
 if uploaded_file:
-    # 檢查是否為新檔案，如果是則重置
     if 'current_fn' not in st.session_state or st.session_state.current_fn != uploaded_file.name:
-        st.session_state.current_fn = uploaded_file.name # [修正] 必須更新 current_fn，否則無限重置
+        st.session_state.current_fn = uploaded_file.name
+        # Reset all logic
         st.session_state.id_list = set()
         st.session_state.id_features = {}
         st.session_state.id_tracking_count = {} 
-        st.session_state.id_positions = {} # 新增：記錄每個 ID 的位置歷程 [(frame_idx, (x, y)), ...]
-        st.session_state.id_motion_log = {} # 新增：記錄每個 ID 的動作分數歷程 {mid: [score, ...]}
-        st.session_state.id_actions = defaultdict(lambda: defaultdict(int)) # [v12] Action Tracking
+        st.session_state.id_positions = {}
+        st.session_state.id_motion_log = {}
+        st.session_state.id_actions = defaultdict(lambda: defaultdict(int))
         st.session_state.processed_file = None 
         st.session_state.last_frame = None
-        st.session_state.lost_ids = {} # {id: {'hist': hist, 'last_seen': frame_idx, 'feat': clothing_str}}
-        st.session_state.id_map = {}   # {temp_id: real_id} mapping
+        st.session_state.lost_ids = {}
+        st.session_state.id_map = {}
         st.session_state.final_id_count = 0
-        st.session_state.reindexing_done = False # [v8 Fix] 防止重複重新編號
+        st.session_state.reindexing_done = False
         st.session_state.final_id_list = []
-        st.session_state.analysis_done = False # [v78 Fix] Ensure new upload resets UI state
-        if 'restored_df' in st.session_state: del st.session_state.restored_df # Clear previous loads
-
-        # [v19 New] Advanced Analytics State
-        st.session_state.id_yaw_history = {} # {mid: [yaw1, yaw2...]}
-        st.session_state.id_focus_score = {} # {mid: focus_frames}
-        st.session_state.id_interactions = defaultdict(int) # {(id1, id2): count}
-        st.session_state.id_gaze_start = {} # [v19.1]
+        st.session_state.analysis_done = False
+        if 'restored_df' in st.session_state: del st.session_state.restored_df
+        st.session_state.id_yaw_history = {}
+        st.session_state.id_focus_score = {}
+        st.session_state.id_interactions = defaultdict(int)
+        st.session_state.id_gaze_start = {}
         st.session_state.social_graph_image = None
-        st.session_state.final_report_df = None # [v90.7 New] Clear report cache on new upload
-
-        # [v48 New] Reset Smoothness Log
+        st.session_state.final_report_df = None
         st.session_state.id_smoothness_log = defaultdict(list)
 
-        if model and hasattr(model, 'predictor') and model.predictor is not None:
-            # model.predictor.trackers = [] 
-            pass
-            
-        # [v21.4 Fix] Persist Video immediately upon upload to prevent NoneType/Buffer issues
         try:
             temp_dir = tempfile.gettempdir()
             current_dir = os.getcwd()
-            # [v90.3 Fix] Clean up old processed videos AND old YAML tracking configs to save space
-            # Only clean up files OLDER than 15 minutes to prevent deleting active concurrent sessions
             now = time.time()
             cleanup_dirs = [temp_dir, current_dir]
-            
             for d in cleanup_dirs:
                 if not os.path.exists(d): continue
                 for f in os.listdir(d):
-                    is_target = (
-                        f.startswith("hmeayc_persist_") or 
-                        f.startswith("obs_video_") or 
-                        f.startswith("fixed_") or 
-                        f.startswith("custom_tracker_")
-                    )
-                    
-                    if is_target and (f.endswith(".mp4") or f.endswith(".yaml")):
-                        f_path = os.path.join(d, f)
+                    if (f.startswith("hmeayc_persist_") or f.startswith("obs_video_") or f.startswith("fixed_")) and (f.endswith(".mp4") or f.endswith(".yaml")):
                         try:
-                            if now - os.path.getmtime(f_path) > 900: # 15 minutes
-                                os.remove(f_path)
+                            if now - os.path.getmtime(os.path.join(d, f)) > 900: os.remove(os.path.join(d, f))
                         except: pass
             p_path = os.path.join(temp_dir, f"hmeayc_persist_{uuid.uuid4().hex[:8]}.mp4")
             uploaded_file.seek(0)
-            with open(p_path, "wb") as f:
-                f.write(uploaded_file.read())
+            with open(p_path, "wb") as f: f.write(uploaded_file.read())
             st.session_state.current_tfile_path = p_path
-            st.session_state.current_fn = uploaded_file.name
-            
-            # [新增] 上傳並暫存完成後，自動跳轉至第二步開始分析
             st.session_state.nav_index = 1
             st.rerun()
         except Exception as e:
-            st.error(f"⚠️ 影片預處理失敗: {e}")
+            st.error(f"❌ 影片上傳失敗: {e}")
 
-        # 清除錯誤位置的定義
         gc.collect()
 
 # --- 防呆機制 (Foolproof) ---
@@ -3378,11 +3239,13 @@ st.markdown("---")
 
 s_ids = sorted(list(st.session_state.id_list))
 if not s_ids:
-    if target_track_id > 0:
-        st.warning(f"⚠️ 分析完成，但在影片中未抓取到您指定的 ID {target_track_id}。")
-        st.info(f"💡 目前影片中總共偵測到 {len(st.session_state.display_mapping)} 位不同的幼兒。如果您想觀察其他孩子，請調整左側的追蹤 ID。")
-    else:
-        st.warning("⚠️ 偵測過程中未抓取到有效 ID，請重新上傳清晰影片。")
+    # [v94.6 UI Fix] Only show warning IF the analysis was actually attempted and finished
+    if st.session_state.get('analysis_done', False):
+        if target_track_id > 0:
+            st.warning(f"⚠️ 分析完成，但在影片中未抓取到您指定的 ID {target_track_id}。")
+            st.info(f"💡 目前影片中總共偵測到 {len(st.session_state.display_mapping)} 位不同的幼兒。如果您想觀察其他孩子，請調整左側的追蹤 ID。")
+        else:
+            st.warning("⚠️ 偵測過程中未抓取到有效 ID，請重新上傳清晰影片。")
 else:
     # [v11 Update] 選擇教師 ID (用於計算師生同步率)
     # 製作選項列表: "ID_1 (原:80)"
