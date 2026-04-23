@@ -1854,18 +1854,18 @@ if 'final_id_list' in st.session_state and st.session_state.final_id_list:
 target_track_id = st.session_state.get('locked_target_id', 0)
 # [v48 New] Context-Aware Sync (Phase 5)
 
-# --- 側邊欄系統設定 ---
+# --- 側邊欄系統設定 (僅保留功能性按鈕) ---
 with st.sidebar:
     st.title("⚙️ 系統設定")
     
-    # 1. 基本資料輸入 (摺疊)
-    with st.expander("📝 基本資料輸入", expanded=False):
-        observer_name = st.text_input("觀察員姓名", value=st.session_state.get('observer_name', ""))
-        activity_name = st.text_input("活動名稱", value=st.session_state.get('activity_name', ""))
-        st.session_state.observer_name = observer_name
-        st.session_state.activity_name = activity_name
+    # 1. 歷史紀錄查詢 (核心功能)
+    if st.button("🗄️ 開啟歷史紀錄查閱", use_container_width=True, type="primary"):
+        st.session_state.nav_mode = "🗄️ 歷史紀錄查閱"
+        st.info("已切換至歷史模式")
 
-    # 2. 身份合併工具 (摺疊)
+    st.write("---")
+    
+    # 2. 身份合併工具 (作為輔助工具收納)
     with st.expander("🔗 身份合併工具 (ID Merge)", expanded=False):
         st.info("若 AI 因為遮擋把同一個小朋友認成兩個 ID，請在此合併。")
         m_col1, m_col2 = st.columns(2)
@@ -1873,23 +1873,14 @@ with st.sidebar:
             source_id = st.number_input("原 ID (消失者)", min_value=0, value=0, key="merge_src")
         with m_col2:
             target_id = st.number_input("新 ID (繼承者)", min_value=0, value=0, key="merge_tgt")
-        
-        if st.button("確認合併身份", type="primary", use_container_width=True):
+        if st.button("確認合併身份", use_container_width=True):
             if source_id > 0 and target_id > 0 and source_id != target_id:
                 if 'manual_id_map' not in st.session_state:
                     st.session_state.manual_id_map = {}
                 st.session_state.manual_id_map[source_id] = target_id
-                st.success(f"✅ 已將 ID {source_id} 關聯至 ID {target_id}。")
-            else:
-                st.error("請輸入有效的不同 ID。")
+                st.success(f"✅ 已合併 ID {source_id} 至 {target_id}")
 
-    # 3. 歷史紀錄查詢 (移至側邊欄)
-    st.markdown("---")
-    if st.button("🗄️ 開啟歷史紀錄查閱", use_container_width=True):
-        st.session_state.nav_mode = "🗄️ 歷史紀錄查閱"
-        st.info("請前往歷史紀錄頁面（若需要特定步驟，請調整導航）")
-
-    # 4. 原有的決策樹按鈕
+    # 3. 決策樹邏輯
     if st.button("🌳 顯示 AI 決策樹邏輯", use_container_width=True):
         st.session_state.show_decision_tree = True
 
@@ -1908,7 +1899,7 @@ if st.session_state.get("show_decision_tree", False):
 
 def wizard_navigation():
     # [v95.0] New 3-Step Navigation
-    steps = ["1️⃣ 影片設定", "2️⃣ 執行分析", "3️⃣ 社交網絡"]
+    steps = ["1️⃣ 建立專案", "2️⃣ 執行分析", "3️⃣ 社交網絡"]
     
     if 'nav_index' not in st.session_state:
         st.session_state.nav_index = 0
@@ -1933,22 +1924,32 @@ def wizard_navigation():
 # --- 1. 導航與狀態顯示 ---
 wizard_navigation()
 
-if st.session_state.current_step == "1️⃣ 影片設定":
-    st.subheader("⚙️ 影片分析設定 (Step 1)")
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        st.session_state.nav_mode = st.radio("系統運行模式", ["🚀 全功能分析", "🗄️ 歷史紀錄查閱"], 
-                                          index=0 if st.session_state.get('nav_mode', "🚀 全功能分析") == "🚀 全功能分析" else 1)
-    with col2:
-        st.session_state.activity_context = st.radio("選擇活動類型", ["跟隨模仿 (Imitation)", "自由創作 (Creative)"], 
-                                                 index=0 if st.session_state.get('activity_context', "跟隨模仿 (Imitation)") == "跟隨模仿 (Imitation)" else 1)
-    
-    col3, col4 = st.columns(2)
-    with col3:
-        st.session_state.perf_mode = st.selectbox("分析效能模式", ["⚡ 超極速 (Ultra Fast)", "🏎️ 渦輪 (Turbo)", "🏃 專業 (Pro)", "⚡ 標準模式 (Balanced)"], index=3)
-    with col4:
-        st.session_state.social_threshold_sec = st.slider("判定互動最少秒數 (秒)", 0.5, 10.0, st.session_state.get('social_threshold_sec', 1.0))
+if st.session_state.current_step == "1️⃣ 建立專案":
+    st.subheader("📄 步驟一：填寫基本觀察資料")
+    with st.container(border=True):
+        c1, c2 = st.columns(2)
+        with c1:
+            st.session_state.observer_name = st.text_input("觀察員姓名", value=st.session_state.get('observer_name', ""), placeholder="例如：文祺 老師")
+            st.session_state.activity_name = st.text_input("活動名稱", value=st.session_state.get('activity_name', ""), placeholder="例如：Walk and copy animal")
+        with c2:
+            st.session_state.act_date = st.date_input("觀察日期", value=st.session_state.get('act_date', datetime.date.today()))
+            st.session_state.music_element = st.text_input("音樂元素 (如：走停、快慢)", value=st.session_state.get('music_element', ""), placeholder="請輸入本堂課的核心音樂元素")
+
+    st.subheader("⚙️ 步驟二：影片與分析設定")
+    with st.container(border=True):
+        col1, col2 = st.columns(2)
+        with col1:
+            st.session_state.nav_mode = st.radio("系統運行模式", ["🚀 全功能分析", "🗄️ 歷史紀錄查閱"], 
+                                              index=0 if st.session_state.get('nav_mode', "🚀 全功能分析") == "🚀 全功能分析" else 1)
+        with col2:
+            st.session_state.activity_context = st.radio("選擇課堂活動類型", ["跟隨模仿 (Imitation)", "自由創作 (Creative)"], 
+                                                     index=0 if st.session_state.get('activity_context', "跟隨模仿 (Imitation)") == "跟隨模仿 (Imitation)" else 1)
+        
+        col3, col4 = st.columns(2)
+        with col3:
+            st.session_state.perf_mode = st.selectbox("AI 分析效能模式", ["⚡ 超極速 (Ultra Fast)", "🏎️ 渦輪 (Turbo)", "🏃 專業 (Pro)", "⚡ 標準模式 (Balanced)"], index=3)
+        with col4:
+            st.session_state.social_threshold_sec = st.slider("社交互動判定最少秒數 (秒)", 0.5, 10.0, st.session_state.get('social_threshold_sec', 1.0))
 
     st.markdown("---")
     uploader_key = st.session_state.get('uploader_key', 0)
@@ -2038,14 +2039,14 @@ if uploaded_file:
         gc.collect()
 
 # --- 防呆機制 (Foolproof) ---
-if st.session_state.current_step in ["2️⃣ 執行分析", "3️⃣ 分析報表", "4️⃣ 歷史紀錄"]:
+if st.session_state.current_step in ["2️⃣ 執行分析", "3️⃣ 社交網絡"]:
     if not st.session_state.get('current_tfile_path'):
-        st.warning("⚠️ 請先在「1️⃣ 設定與上傳」上傳影片！")
+        st.warning("⚠️ 請先在「1️⃣ 建立專案」上傳影片！")
         st.stop()
 
-if st.session_state.current_step in ["3️⃣ 分析報表", "4️⃣ 歷史紀錄"]:
+if st.session_state.current_step in ["3️⃣ 社交網絡"]:
     if not st.session_state.get('analysis_done'):
-        st.warning("⚠️ 請先完成「2️⃣ 影片分析」！")
+        st.warning("⚠️ 請先在「2️⃣ 執行分析」中完成分析！")
         st.stop()
 
 if not st.session_state.analysis_done and st.session_state.current_step == "2️⃣ 執行分析":
@@ -3608,10 +3609,18 @@ else:
                     logging.error(f"Rename Callback Error: {e}")
 
     # [v95.0 Fix] Show video and report in Step 2
+    # [v96.0 Layout Fix] Side-by-Side Video and Analysis Info
     if st.session_state.current_step == "2️⃣ 執行分析":
         if st.session_state.get('processed_file'):
-            st.video(st.session_state.processed_file)
-            st.success("🎥 分析影片已產出！")
+            st.write("---")
+            st.subheader("🎥 分析過程與數據對照")
+            v_col, d_col = st.columns([1, 1])
+            with v_col:
+                st.video(st.session_state.processed_file)
+                st.caption("🔍 辨識過程影片 (包含 YOLO 骨架與 ID)")
+            with d_col:
+                st.info("💡 您可以邊看左側影片，邊在下方確認 AI 數據評分。")
+                st.success("🎥 影片已成功產出並保留，您可以反覆觀看。")
             
     # [v95.0 Final] Display Data Editor and Export in Step 2
     if st.session_state.current_step == "2️⃣ 執行分析":
